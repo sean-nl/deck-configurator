@@ -6,7 +6,7 @@ import { SDFGeometryGenerator } from 'three/addons/geometries/SDFGeometryGenerat
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-let renderer, stats, meshBox, frameMesh, scene, camera, clock, controls;
+let renderer, stats, meshBox, meshFrame, scene, camera, clock, controls;
 
 const settings = {
     x: 2,
@@ -18,46 +18,6 @@ const settings = {
     material: 'normal',
     vertexCount: '0'
 };
-
-// Example SDF from https://www.shadertoy.com/view/MdXSWn -->
-
-//This doesn't appear to be used...
-const shader = /* glsl */`
-    float dist(vec3 p) {
-        p.xyz = p.xzy;
-        p *= 1.2;
-        vec3 z = p;
-        vec3 dz=vec3(0.0);
-        float power = 8.0;
-        float r, theta, phi;
-        float dr = 1.0;
-        
-        float t0 = 1.0;
-        for(int i = 0; i < 7; ++i) {
-            r = length(z);
-            if(r > 2.0) continue;
-            theta = atan(z.y / z.x);
-            #ifdef phase_shift_on
-            phi = asin(z.z / r) ;
-            #else
-            phi = asin(z.z / r);
-            #endif
-            
-            dr = pow(r, power - 1.0) * dr * power + 1.0;
-        
-            r = pow(r, power);
-            theta = theta * power;
-            phi = phi * power;
-            
-            z = r * vec3(cos(theta)*cos(phi), sin(theta)*cos(phi), sin(phi)) + p;
-            
-            t0 = min(t0, r);
-        }
-
-        return 0.5 * log(r) * r / dr;
-    }
-`;
-
 
 init();
 animate();
@@ -91,8 +51,6 @@ function init() {
 
     window.addEventListener( 'resize', onWindowResize );
 
-    //
-
     const panel = new GUI( );
 
     panel.add( settings, 'x', 1, 10, 1 ).name( 'X' ).onFinishChange( compile );
@@ -103,8 +61,6 @@ function init() {
     panel.add( settings, 'wireframe' ).name( 'Wireframe' ).onChange( setMaterial );
     panel.add( settings, 'autoRotate' ).name( 'Auto Rotate' );
     panel.add( settings, 'vertexCount' ).name( 'Vertex count' ).listen().disable();
-
-    //
 
     compile();
 
@@ -129,7 +85,7 @@ function compile() {
         const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
         meshBox.scale.set( scale, scale, scale );
 
-        setMaterial();
+        setMaterial(meshBox);
 
     }
 
@@ -142,29 +98,31 @@ function compile() {
 function drawFrame() {
     
     console.log('in drawFrame');
-    const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
-    boxGeometry.computeVertexNormals();
+    // const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
+    // boxGeometry.computeVertexNormals();
 
     //Dummy geometry representing the frame
     const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y, settings.z ); //This generates a BufferGeometry
     frameGeometry.computeVertexNormals();
 
-    //Need check that frameMesh exists.
+    //Need check that meshFrame exists.
     if ( meshBox && settings.showFrame ) {
 
         meshBox.geometry.dispose();
         scene.remove(meshBox);
-        frameMesh = new THREE.Mesh( frameGeometry, new THREE.MeshBasicMaterial() )
+        meshFrame = new THREE.Mesh( frameGeometry, new THREE.MeshBasicMaterial() )
 
-        scene.add( frameMesh );
+        scene.add( meshFrame );
+        setMaterial(meshFrame);
+        
         const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
-        frameMesh.scale.set( scale, scale, scale );
+        meshFrame.scale.set( scale, scale, scale );
 
 
 
     } else if ( meshBox ) {
 
-        scene.remove( frameMesh );
+        scene.remove( meshFrame );
         scene.add( meshBox );
 
     }
@@ -173,21 +131,21 @@ function drawFrame() {
 
 }
 
-function setMaterial() {
+function setMaterial(geometry) {
 
-    meshBox.material.dispose();
+    geometry.material.dispose();
 
     if ( settings.material == 'depth' ) {
 
-        meshBox.material = new THREE.MeshDepthMaterial();
+        geometry.material = new THREE.MeshDepthMaterial();
 
     } else if ( settings.material == 'normal' ) {
 
-        meshBox.material = new THREE.MeshNormalMaterial();
+        geometry.material = new THREE.MeshNormalMaterial();
 
     }
 
-    meshBox.material.wireframe = settings.wireframe;
+    geometry.material.wireframe = settings.wireframe;
 
 }
 
