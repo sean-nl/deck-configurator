@@ -13,7 +13,7 @@ const settings = {
     y: 1,
     z: 2,
     showFrame: false,
-    autoRotate: true,
+    autoRotate: false,
     wireframe: false,
     material: 'normal',
     vertexCount: '0'
@@ -56,7 +56,7 @@ function init() {
     panel.add( settings, 'x', 1, 10, 1 ).name( 'X' ).onFinishChange( compile );
     panel.add( settings, 'y', 1, 10, 1 ).name( 'Y' ).onFinishChange( compile );
     panel.add( settings, 'z', 1, 10, 1 ).name( 'Z' ).onFinishChange( compile );
-    panel.add( settings, 'showFrame' ).name( 'Show Frame' ).onChange( drawFrame );
+    panel.add( settings, 'showFrame' ).name( 'Show Frame' ).onChange( compile );
     panel.add( settings, 'material', [ 'depth', 'normal' ] ).name( 'Material' ).onChange( setMaterial );
     panel.add( settings, 'wireframe' ).name( 'Wireframe' ).onChange( setMaterial );
     panel.add( settings, 'autoRotate' ).name( 'Auto Rotate' );
@@ -66,43 +66,87 @@ function init() {
 
 }
 
+
 function compile() {
 
-    const generator = new SDFGeometryGenerator( renderer );
-    const geometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
-    geometry.computeVertexNormals();
+    if ( settings.showFrame ) {
+        console.log('show the frame');
+        //Display the frame geometry
+        const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
+        frameGeometry.computeVertexNormals();
 
-    if ( meshBox ) { // updates mesh
+        if ( meshBox ) {
 
-        meshBox.geometry.dispose();
-        meshBox.geometry = geometry;
+            meshBox.geometry.dispose();
+            scene.remove(meshBox);
 
-    } else { // inits meshBox : THREE.Mesh
+        }
 
-        meshBox = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial() );
-        scene.add( meshBox );
+        if ( meshFrame ) { // updates mesh
 
-        const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
-        meshBox.scale.set( scale, scale, scale );
+            meshFrame.geometry.dispose();
+            meshFrame.geometry = frameGeometry;
+            if ( !(meshFrame.parent === scene) ) { scene.add(meshFrame); }
+    
+        } else { // inits meshBox : THREE.Mesh
+    
+            meshFrame = new THREE.Mesh( frameGeometry, new THREE.MeshBasicMaterial() );
+            scene.add( meshFrame );
+    
+            const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
+            meshFrame.scale.set( scale, scale, scale );
+    
+            setMaterial(meshFrame);
+    
+        }
+        settings.vertexCount = frameGeometry.attributes.position.count;
+    
+    } else {
+        //TODO: resolve this issue where objects are getting removed from the scene.
+        console.log('show the box');
+        //Display the box geometry
+        const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
+        boxGeometry.computeVertexNormals();
 
-        setMaterial(meshBox);
+        if ( meshFrame ) {
 
+            meshFrame.geometry.dispose();
+            scene.remove(meshFrame);
+
+        }
+
+        if ( meshBox ) { // updates mesh
+            console.log('thinks there is a meshBox')
+            console.log(meshBox);
+            meshBox.geometry.dispose();
+            meshBox.geometry = boxGeometry;
+            if ( !(meshBox.parent === scene) ) { scene.add(meshBox); }
+    
+        } else { // inits meshBox : THREE.Mesh
+            console.log('thinks there isnt a meshBox and is initializing');
+            meshBox = new THREE.Mesh( boxGeometry, new THREE.MeshBasicMaterial() );
+            scene.add( meshBox );
+    
+            const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
+            meshBox.scale.set( scale, scale, scale );
+    
+            setMaterial(meshBox);
+    
+        }
+        settings.vertexCount = boxGeometry.attributes.position.count;
     }
-
-    settings.vertexCount = geometry.attributes.position.count;
-
 }
+
+
 
 //Incremental goal is to make the meshframe draw and rotate the exact same way as the meshBox.
 //This will probably involve making these functions able to be passed objects...
 function drawFrame() {
     
     console.log('in drawFrame');
-    // const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
-    // boxGeometry.computeVertexNormals();
 
     //Dummy geometry representing the frame
-    const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y, settings.z ); //This generates a BufferGeometry
+    const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
     frameGeometry.computeVertexNormals();
 
     //Need check that meshFrame exists.
@@ -114,11 +158,9 @@ function drawFrame() {
 
         scene.add( meshFrame );
         setMaterial(meshFrame);
-        
+
         const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
         meshFrame.scale.set( scale, scale, scale );
-
-
 
     } else if ( meshBox ) {
 
