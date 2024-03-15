@@ -66,7 +66,6 @@ function init() {
 
 }
 
-
 function compile() {
 
     if ( settings.showFrame ) {
@@ -135,42 +134,6 @@ function compile() {
         }
         settings.vertexCount = boxGeometry.attributes.position.count;
     }
-}
-
-
-
-//Incremental goal is to make the meshframe draw and rotate the exact same way as the meshBox.
-//This will probably involve making these functions able to be passed objects...
-function drawFrame() {
-    
-    console.log('in drawFrame');
-
-    //Dummy geometry representing the frame
-    const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
-    frameGeometry.computeVertexNormals();
-
-    //Need check that meshFrame exists.
-    if ( meshBox && settings.showFrame ) {
-
-        meshBox.geometry.dispose();
-        scene.remove(meshBox);
-        meshFrame = new THREE.Mesh( frameGeometry, new THREE.MeshBasicMaterial() )
-
-        scene.add( meshFrame );
-        setMaterial(meshFrame);
-
-        const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
-        meshFrame.scale.set( scale, scale, scale );
-
-    } else if ( meshBox ) {
-
-        scene.remove( meshFrame );
-        scene.add( meshBox );
-
-    }
-
-    //add handling for no meshBox? probably unneccessary. Check.
-
 }
 
 function setMaterial(geometry) {
