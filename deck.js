@@ -69,7 +69,6 @@ function init() {
 function compile() {
 
     if ( settings.showFrame ) {
-        console.log('show the frame');
         //Display the frame geometry
         const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
         frameGeometry.computeVertexNormals();
@@ -101,8 +100,6 @@ function compile() {
         settings.vertexCount = frameGeometry.attributes.position.count;
     
     } else {
-        //TODO: resolve this issue where objects are getting removed from the scene.
-        console.log('show the box');
         //Display the box geometry
         const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
         boxGeometry.computeVertexNormals();
@@ -115,14 +112,11 @@ function compile() {
         }
 
         if ( meshBox ) { // updates mesh
-            console.log('thinks there is a meshBox')
-            console.log(meshBox);
             meshBox.geometry.dispose();
             meshBox.geometry = boxGeometry;
             if ( !(meshBox.parent === scene) ) { scene.add(meshBox); }
     
         } else { // inits meshBox : THREE.Mesh
-            console.log('thinks there isnt a meshBox and is initializing');
             meshBox = new THREE.Mesh( boxGeometry, new THREE.MeshBasicMaterial() );
             scene.add( meshBox );
     
