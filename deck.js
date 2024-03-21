@@ -6,7 +6,7 @@ import { SDFGeometryGenerator } from 'three/addons/geometries/SDFGeometryGenerat
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-let renderer, stats, meshBox, meshFrame, scene, camera, clock, controls;
+let renderer, stats, meshBox, scene, camera, clock, controls;
 
 const settings = {
     x: 2,
@@ -18,6 +18,10 @@ const settings = {
     material: 'normal',
     vertexCount: '0'
 };
+
+const frameGeos = [];
+const nFrameMeshes = 1;
+const meshFrames = []
 
 init();
 animate();
@@ -70,8 +74,13 @@ function compile() {
 
     if ( settings.showFrame ) {
         //Display the frame geometry
-        const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
-        frameGeometry.computeVertexNormals();
+        for (let i = 0; i < nFrameMeshes; i++) {
+
+            const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
+            frameGeometry.computeVertexNormals();
+            frameGeos.push(frameGeometry);
+
+        }
 
         if ( meshBox ) {
 
@@ -80,35 +89,44 @@ function compile() {
 
         }
 
-        if ( meshFrame ) { // updates mesh
-
-            meshFrame.geometry.dispose();
-            meshFrame.geometry = frameGeometry;
-            if ( !(meshFrame.parent === scene) ) { scene.add(meshFrame); }
+        if ( meshFrames.length > 0 ) { // updates mesh
+            console.log('meshFrames > 0');
+            for (let i = 0; i < nFrameMeshes; i++) {
+                meshFrames[i].geometry.dispose();
+                meshFrames[i].geometry = frameGeos[i];
+                if ( !(meshFrames[i].parent === scene) ) {
+                    scene.add(meshFrames[i]);
+                }
+            }
     
-        } else { // inits meshBox : THREE.Mesh
+        } else { // inits meshFrames : THREE.Mesh
+            for (let i = 0; i < nFrameMeshes; i++) {
+                let meshFrame;
+                meshFrame = new THREE.Mesh( frameGeos[i], new THREE.MeshBasicMaterial() );
+                console.log('setting position');
+                scene.add( meshFrame );
+                
+                const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
+                meshFrame.scale.set( scale, scale, scale );
+                
+                
     
-            meshFrame = new THREE.Mesh( frameGeometry, new THREE.MeshBasicMaterial() );
-            scene.add( meshFrame );
-    
-            const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
-            meshFrame.scale.set( scale, scale, scale );
-    
-            setMaterial(meshFrame);
-    
+                setMaterial(meshFrame);
+                meshFrames.push(meshFrame);
+            }
+        settings.vertexCount = 0; //placeholder as we are not currently counting them all across the various meshes...
         }
-        settings.vertexCount = frameGeometry.attributes.position.count;
     
     } else {
         //Display the box geometry
         const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
         boxGeometry.computeVertexNormals();
 
-        if ( meshFrame ) {
-
-            meshFrame.geometry.dispose();
-            scene.remove(meshFrame);
-
+        if ( meshFrames.length > 0 ) {
+            for (let i = 0; i < nFrameMeshes; i++) {
+                meshFrames[i].geometry.dispose();
+                scene.remove(meshFrames[i]);
+            }
         }
 
         if ( meshBox ) { // updates mesh
@@ -130,8 +148,10 @@ function compile() {
     }
 }
 
+//Not working... why?
 function setMaterial(geometry) {
 
+    console.log(geometry.material)
     geometry.material.dispose();
 
     if ( settings.material == 'depth' ) {
