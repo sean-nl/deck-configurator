@@ -9,9 +9,9 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 let renderer, stats, meshBox, scene, camera, clock, controls;
 
 const settings = {
-    x: 2,
-    y: 1,
-    z: 2,
+    x: 6,
+    y: 3,
+    z: 6,
     showFrame: false,
     autoRotate: false,
     wireframe: false,
@@ -20,22 +20,23 @@ const settings = {
 };
 
 const frameGeos = [];
-const nFrameMeshes = 1;
+const nFrameMeshes = 3;
 const meshFrames = []
 
 init();
 animate();
 
+//TODO: fix the scale problem. Everything should be displayed at 1:1; camera should be responsible for scale.
 function init() {
 
     const w = window.innerWidth;
     const h = window.innerHeight;
 
-    camera = new THREE.OrthographicCamera( w / - 2, w / 2, h / 2, h / - 2, 0.01, 6000 );
-    camera.position.z = 4000;
+    camera = new THREE.OrthographicCamera( w / - 2, w / 2, h / 2, h / - 2, 0.01, 70000 );
+    camera.position.z = 10000;
 
     //Alternative: could play with the frustrum of the camera.
-    camera.zoom = 0.8;
+    camera.zoom = 3.0;
     camera.updateProjectionMatrix();
 
     scene = new THREE.Scene();
@@ -57,9 +58,9 @@ function init() {
 
     const panel = new GUI( );
 
-    panel.add( settings, 'x', 1, 10, 1 ).name( 'X' ).onFinishChange( compile );
-    panel.add( settings, 'y', 1, 10, 1 ).name( 'Y' ).onFinishChange( compile );
-    panel.add( settings, 'z', 1, 10, 1 ).name( 'Z' ).onFinishChange( compile );
+    panel.add( settings, 'x', 1, 20, 1 ).name( 'X' ).onFinishChange( compile );
+    panel.add( settings, 'y', 1, 20, 1 ).name( 'Y' ).onFinishChange( compile );
+    panel.add( settings, 'z', 1, 20, 1 ).name( 'Z' ).onFinishChange( compile );
     panel.add( settings, 'showFrame' ).name( 'Show Frame' ).onChange( compile );
     panel.add( settings, 'material', [ 'depth', 'normal' ] ).name( 'Material' ).onChange( setMaterial );
     panel.add( settings, 'wireframe' ).name( 'Wireframe' ).onChange( setMaterial );
@@ -76,7 +77,7 @@ function compile() {
         //Display the frame geometry
         for (let i = 0; i < nFrameMeshes; i++) {
 
-            const frameGeometry = new THREE.BoxGeometry( settings.x / 2, settings.y / 2, settings.z / 2); //This generates a BufferGeometry
+            const frameGeometry = new THREE.BoxGeometry( settings.x * 12 / 2, settings.y * 12 / 2, settings.z * 12 / 2); //This generates a BufferGeometry. Convert to inches.
             frameGeometry.computeVertexNormals();
             frameGeos.push(frameGeometry);
 
@@ -96,6 +97,7 @@ function compile() {
                 meshFrames[i].geometry = frameGeos[i];
                 if ( !(meshFrames[i].parent === scene) ) {
                     scene.add(meshFrames[i]);
+                    meshFrames[i].position.x = i*12*4;
                 }
             }
     
@@ -105,11 +107,7 @@ function compile() {
                 meshFrame = new THREE.Mesh( frameGeos[i], new THREE.MeshBasicMaterial() );
                 console.log('setting position');
                 scene.add( meshFrame );
-                
-                const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
-                meshFrame.scale.set( scale, scale, scale );
-                
-                
+                meshFrame.position.x = i*12*4;
     
                 setMaterial(meshFrame);
                 meshFrames.push(meshFrame);
@@ -119,7 +117,7 @@ function compile() {
     
     } else {
         //Display the box geometry
-        const boxGeometry = new THREE.BoxGeometry( settings.x, settings.y, settings.z ); //This generates a BufferGeometry
+        const boxGeometry = new THREE.BoxGeometry( settings.x * 12, settings.y * 12, settings.z * 12 ); //This generates a BufferGeometry. Convert to inches.
         boxGeometry.computeVertexNormals();
 
         if ( meshFrames.length > 0 ) {
@@ -137,9 +135,6 @@ function compile() {
         } else { // inits meshBox : THREE.Mesh
             meshBox = new THREE.Mesh( boxGeometry, new THREE.MeshBasicMaterial() );
             scene.add( meshBox );
-    
-            const scale = Math.min( window.innerWidth, window.innerHeight ) / 2 * 0.66;
-            meshBox.scale.set( scale, scale, scale );
     
             setMaterial(meshBox);
     
