@@ -64,7 +64,6 @@ function init() {
     panel.add( settings, 'showFrame' ).name( 'Show Frame' ).onChange( compile );
     panel.add( settings, 'material', [ 'depth', 'normal' ] ).name( 'Material' ).onChange( setMaterial );
     panel.add( settings, 'wireframe' ).name( 'Wireframe' ).onChange( setMaterial );
-    panel.add( settings, 'autoRotate' ).name( 'Auto Rotate' );
     panel.add( settings, 'vertexCount' ).name( 'Vertex count' ).listen().disable();
 
     compile();
@@ -190,12 +189,6 @@ function animate() {
     requestAnimationFrame( animate );
 
     controls.update();
-
-    if ( settings.autoRotate ) {
-
-        meshBox.rotation.y += Math.PI * 0.05 * clock.getDelta();
-        
-    }
 
     render();
 
