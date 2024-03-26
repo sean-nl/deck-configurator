@@ -83,7 +83,7 @@ function compile() {
 
         }
 
-    meshFrames = getFrameMeshes(settings.x * 12 / 2, settings.y * 12 / 2, settings.z * 12 / 2); //Convert to inches
+    meshFrames = getFrameMeshes(settings.x * 12 / 2, settings.y * 12 / 2, settings.z * 12); //Convert to inches
 
     } else {
 
@@ -188,7 +188,7 @@ function getFrameMeshes(x,y,z) {
     const joistDepth = 4; 
     const nJoists = nFrameMeshes;
     const xPositions = divideLengthOffsetEnds(x*2,nJoists,joistWidth-1);
-    const joistCentroids = xPositions.map( (xPos) => [xPos - x, y - joistDepth/2, z/2] );
+    const joistCentroids = xPositions.map( (xPos) => [xPos - x, y - joistDepth/2, 0] );
     console.log(xPositions);
     console.log(joistCentroids);
         
@@ -196,7 +196,7 @@ function getFrameMeshes(x,y,z) {
     //Get frameGeometry
     for (let i = 0; i < nFrameMeshes; i++) {
 
-        const frameGeometry = new THREE.BoxGeometry( 2, 4, z*2 ); //This generates a BufferGeometry.
+        const frameGeometry = new THREE.BoxGeometry( 2, 4, z ); //This generates a BufferGeometry.
         frameGeometry.computeVertexNormals();
         frameGeos.push(frameGeometry);
 
