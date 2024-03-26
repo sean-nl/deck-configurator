@@ -26,7 +26,6 @@ const meshFrames = []
 init();
 animate();
 
-//TODO: fix the scale problem. Everything should be displayed at 1:1; camera should be responsible for scale.
 function init() {
 
     const w = window.innerWidth;
@@ -70,17 +69,12 @@ function init() {
 
 }
 
+//Proposed:
+//Step 2 - make the resultant meshes three equidistant joists
+//Step 3 - make the resultant meshes n equidistant joists
 function compile() {
 
     if ( settings.showFrame ) {
-        //Display the frame geometry
-        for (let i = 0; i < nFrameMeshes; i++) {
-
-            const frameGeometry = new THREE.BoxGeometry( settings.x * 12 / 2, settings.y * 12 / 2, settings.z * 12 / 2); //This generates a BufferGeometry. Convert to inches.
-            frameGeometry.computeVertexNormals();
-            frameGeos.push(frameGeometry);
-
-        }
 
         if ( meshBox ) {
 
@@ -89,35 +83,9 @@ function compile() {
 
         }
 
-        if ( meshFrames.length > 0 ) { // updates mesh
-            console.log('meshFrames > 0');
-            for (let i = 0; i < nFrameMeshes; i++) {
-                meshFrames[i].geometry.dispose();
-                meshFrames[i].geometry = frameGeos[i];
-                if ( !(meshFrames[i].parent === scene) ) {
-                    scene.add(meshFrames[i]);
-                    meshFrames[i].position.x = i*12*4;
-                }
-            }
-    
-        } else { // inits meshFrames : THREE.Mesh
-            for (let i = 0; i < nFrameMeshes; i++) {
-                let meshFrame;
-                meshFrame = new THREE.Mesh( frameGeos[i], new THREE.MeshBasicMaterial() );
-                console.log('setting position');
-                scene.add( meshFrame );
-                meshFrame.position.x = i*12*4;
-    
-                setMaterial(meshFrame);
-                meshFrames.push(meshFrame);
-            }
-        settings.vertexCount = 0; //placeholder as we are not currently counting them all across the various meshes...
-        }
-    
+    meshFrames = getFrameMeshes(settings.x * 12 / 2, settings.y * 12 / 2, settings.z * 12 / 2); //Convert to inches
+
     } else {
-        //Display the box geometry
-        const boxGeometry = new THREE.BoxGeometry( settings.x * 12, settings.y * 12, settings.z * 12 ); //This generates a BufferGeometry. Convert to inches.
-        boxGeometry.computeVertexNormals();
 
         if ( meshFrames.length > 0 ) {
             for (let i = 0; i < nFrameMeshes; i++) {
@@ -125,6 +93,10 @@ function compile() {
                 scene.remove(meshFrames[i]);
             }
         }
+
+        //Display the box geometry
+        const boxGeometry = new THREE.BoxGeometry( settings.x * 12, settings.y * 12, settings.z * 12 ); //This generates a BufferGeometry. Convert to inches.
+        boxGeometry.computeVertexNormals();
 
         if ( meshBox ) { // updates mesh
             meshBox.geometry.dispose();
@@ -207,4 +179,42 @@ function getBox2Point(v1, v2, z, d) {
     scene.add( meshBox );
     meshBox.position = ( v1.x, v1.y, z - (d/2) );
     return meshBox;
+}
+
+function getFrameMeshes(x,y,z) {
+
+        //Get frameGeometry
+        for (let i = 0; i < nFrameMeshes; i++) {
+
+            const frameGeometry = new THREE.BoxGeometry( x, y, z ); //This generates a BufferGeometry.
+            frameGeometry.computeVertexNormals();
+            frameGeos.push(frameGeometry);
+
+        }
+
+        //If meshes array exists, dispose all and replace with the new frameGeometry
+        if ( meshFrames.length > 0 ) { // updates mesh
+            console.log('meshFrames > 0');
+            for (let i = 0; i < nFrameMeshes; i++) {
+                meshFrames[i].geometry.dispose();
+                meshFrames[i].geometry = frameGeos[i];
+                if ( !(meshFrames[i].parent === scene) ) {
+                    scene.add(meshFrames[i]);
+                    meshFrames[i].position.x = i*12*4;
+                }
+            }
+        } else { // inits meshFrames : THREE.Mesh
+            for (let i = 0; i < nFrameMeshes; i++) {
+                let meshFrame;
+                meshFrame = new THREE.Mesh( frameGeos[i], new THREE.MeshBasicMaterial() );
+                console.log('setting position');
+                scene.add( meshFrame );
+                meshFrame.position.x = i*12*4;
+    
+                setMaterial(meshFrame);
+                meshFrames.push(meshFrame);
+            }
+        settings.vertexCount = 0; //placeholder as we are not currently counting them all across the various meshes...
+        }
+    return meshFrames; //to be threes mesh
 }
