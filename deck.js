@@ -21,7 +21,7 @@ const settings = {
 
 const frameGeos = [];
 const nFrameMeshes = 3;
-const meshFrames = []
+let meshFrames = []
 
 init();
 animate();
@@ -181,40 +181,68 @@ function getBox2Point(v1, v2, z, d) {
     return meshBox;
 }
 
+//TODO: still contains a placement bug...
 function getFrameMeshes(x,y,z) {
 
-        //Get frameGeometry
+    const joistWidth = 2;
+    const joistDepth = 4; 
+    const nJoists = nFrameMeshes;
+    const xPositions = divideLengthOffsetEnds(x*2,nJoists,joistWidth-1);
+    const joistCentroids = xPositions.map( (xPos) => [xPos - x, y - joistDepth/2, z/2] );
+    console.log(xPositions);
+    console.log(joistCentroids);
+        
+
+    //Get frameGeometry
+    for (let i = 0; i < nFrameMeshes; i++) {
+
+        const frameGeometry = new THREE.BoxGeometry( 2, 4, z*2 ); //This generates a BufferGeometry.
+        frameGeometry.computeVertexNormals();
+        frameGeos.push(frameGeometry);
+
+    }
+
+    //If meshes array exists, dispose all and replace with the new frameGeometry
+    if ( meshFrames.length > 0 ) { // updates mesh
+        console.log('meshFrames > 0');
         for (let i = 0; i < nFrameMeshes; i++) {
-
-            const frameGeometry = new THREE.BoxGeometry( x, y, z ); //This generates a BufferGeometry.
-            frameGeometry.computeVertexNormals();
-            frameGeos.push(frameGeometry);
-
-        }
-
-        //If meshes array exists, dispose all and replace with the new frameGeometry
-        if ( meshFrames.length > 0 ) { // updates mesh
-            console.log('meshFrames > 0');
-            for (let i = 0; i < nFrameMeshes; i++) {
-                meshFrames[i].geometry.dispose();
-                meshFrames[i].geometry = frameGeos[i];
-                if ( !(meshFrames[i].parent === scene) ) {
-                    scene.add(meshFrames[i]);
-                    meshFrames[i].position.x = i*12*4;
-                }
+            let meshFrame = meshFrames[i];
+            meshFrame.geometry.dispose();
+            meshFrame.geometry = frameGeos[i];
+            if ( !(meshFrames[i].parent === scene) ) { //if not present in scene already, add to scene
+                scene.add(meshFrame);
+                // meshFrame.position.x = i*12*4;
+                meshFrame.position.x = joistCentroids[i][0];
+                meshFrame.position.y = joistCentroids[i][1];
+                meshFrame.position.z = joistCentroids[i][2];
             }
-        } else { // inits meshFrames : THREE.Mesh
-            for (let i = 0; i < nFrameMeshes; i++) {
-                let meshFrame;
-                meshFrame = new THREE.Mesh( frameGeos[i], new THREE.MeshBasicMaterial() );
-                console.log('setting position');
-                scene.add( meshFrame );
-                meshFrame.position.x = i*12*4;
-    
-                setMaterial(meshFrame);
-                meshFrames.push(meshFrame);
-            }
-        settings.vertexCount = 0; //placeholder as we are not currently counting them all across the various meshes...
         }
+    } else { // inits meshFrames : THREE.Mesh
+        for (let i = 0; i < nFrameMeshes; i++) {
+            let meshFrame;
+            meshFrame = new THREE.Mesh( frameGeos[i], new THREE.MeshBasicMaterial() );
+            console.log('setting position');
+            scene.add( meshFrame );
+            // meshFrame.position.x = i*12*4;
+            meshFrame.position.x = joistCentroids[i][0];
+            meshFrame.position.y = joistCentroids[i][1];
+            meshFrame.position.z = joistCentroids[i][2];
+
+            setMaterial(meshFrame);
+            meshFrames.push(meshFrame);
+        }
+    settings.vertexCount = 0; //placeholder as we are not currently counting them all across the various meshes...
+    }
     return meshFrames; //to be threes mesh
+}
+
+function divideLengthOffsetEnds(length,n,offset) {
+    let divPoints = [];
+    const interval = length/(n - 1);
+    for (let i = 0; i < n; i++) {
+        divPoints.push(interval*i);
+    }
+    divPoints[0] += offset;
+    divPoints[n-1] -= offset;
+    return divPoints;
 }
